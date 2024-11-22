@@ -24,9 +24,7 @@ export const GET = async () => {
      * We are using the Prisma client to query the database for all users
      */
     const allUsers = await prisma.user.findMany();
-    // If there are no users in the database, we want to return a 404 status code
-    // TODO (Confirm this, because when no users inside the table, it returns an empty array)
-    if (!allUsers) {
+    if (allUsers.length === 0) {
       /**
        * The NextResponse object is a special object that Next.js provides that allows us to customize
        * the response to the user. Here, we are using it to return a JSON response with a status code
