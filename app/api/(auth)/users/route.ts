@@ -6,17 +6,17 @@
  /* ================================================================================================ */
 
 import { prisma } from "@/utils/db";
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 
-  /**
-   * Handles GET requests to the /users endpoint.
-   * This function is called when the user visits the /users endpoint in their browser.
-   * It queries the database for all users and returns them in a JSON response.
-   * If there are no users in the database, it returns a 404 status code with a message indicating that no users
-   * could be found.// TODO (Confirm this, because when no users inside the table, it returns an empty array)
-   * If there is an error with the database query, it returns a 500 status code with a message indicating that an
-   * unknown error occurred.
-   */
+/**
+ * Handles GET requests to the /users endpoint.
+ * This function is called when the user visits the /users endpoint in their browser.
+ * It queries the database for all users and returns them in a JSON response.
+ * If there are no users in the database, it returns a 404 status code with a message indicating that no users
+ * could be found.
+ * If there is an error with the database query, it returns a 500 status code with a message indicating that an
+ * unknown error occurred.
+ */
 export const GET = async () => {
   try {
     /**
@@ -50,6 +50,61 @@ export const GET = async () => {
     /**
      * If there is an error, we want to return a JSON response with a status code of 500 and a message
      * indicating that there was an error
+     */
+    return NextResponse.json({ message: errorMessage }, { status: 500 });
+  }
+};
+
+/**
+ * Handles POST requests to the /users endpoint.
+ * This function is called when the user visits the /users endpoint in their browser
+ * and makes a POST request. It takes the request and response objects as parameters,
+ * which are special objects that Next.js provides that allow us to customize the
+ * request and response.
+ * This function tries to create a user in the database with the data in the
+ * request body. If the creation is successful, it returns a JSON response with
+ * a status code of 201 and the user that was created. If there is an error with
+ * the database query, it returns a JSON response with a status code of 500 and
+ * a message indicating that there was an error.
+ */
+export const POST = async (request: NextRequest) => {
+  try {
+    /**
+     * The request object has a method called `json()` which parses the request body
+     * as JSON and returns it as an object. We are using this method to get the request
+     * body as an object
+     */
+    const body = await request.json();
+    /**
+     * We are using the Prisma client to create a user in the database with the
+     * data in the request body. The `create()` method takes an object with the
+     * properties for the user as its argument. In this case, we are passing the
+     * `body` object as the argument.
+     */
+    const user = await prisma.user.create({ data: body });
+    /**
+     * If the creation is successful, we want to return a JSON response with a
+     * status code of 201 and the user that was created. The `NextResponse` object
+     * is a special object that Next.js provides that allows us to customize the
+     * response to the user.
+     */
+    return NextResponse.json(
+      { user, message: "User created successfully" },
+      { status: 201 }
+    );
+  } catch (error: unknown) {
+    /**
+     * If there is an error with the database query, we want to handle it here.
+     * We are using a try/catch block to catch any errors that might occur
+     * The error object is of type unknown, so we have to cast it to an Error
+     */
+    const errorMessage =
+      error instanceof Error
+        ? "Error Saving User " + error.message
+        : "An unknown error occurred";
+    /**
+     * If there is an error, we want to return a JSON response with a status code of 500
+     * and a message indicating that there was an error
      */
     return NextResponse.json({ message: errorMessage }, { status: 500 });
   }
