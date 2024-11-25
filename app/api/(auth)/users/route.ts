@@ -2,10 +2,11 @@
  * Title : First API call
  * Description : Simplest API call with Next.js
  * Author : Hashan
- * Date : February 10th, 2024
+ * Date : November 20th, 2024
  /* ================================================================================================ */
 
 import { prisma } from "@/utils/db";
+import { handleError } from "@/utils/errorHandler";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -38,20 +39,7 @@ export const GET = async () => {
      */
     return NextResponse.json(allUsers, { status: 200 });
   } catch (error: unknown) {
-    /**
-     * If there is an error with the database query, we want to handle it here.
-     * We are using a try/catch block to catch any errors that might occur
-     * The error object is of type unknown, so we have to cast it to an Error
-     */
-    const errorMessage =
-      error instanceof Error
-        ? "Error Fetching Users " + error.message
-        : "An unknown error occurred";
-    /**
-     * If there is an error, we want to return a JSON response with a status code of 500 and a message
-     * indicating that there was an error
-     */
-    return NextResponse.json({ message: errorMessage }, { status: 500 });
+    return handleError(error, 404, "Error Fetching Users");
   }
 };
 
@@ -93,19 +81,6 @@ export const POST = async (request: NextRequest) => {
       { status: 201 }
     );
   } catch (error: unknown) {
-    /**
-     * If there is an error with the database query, we want to handle it here.
-     * We are using a try/catch block to catch any errors that might occur
-     * The error object is of type unknown, so we have to cast it to an Error
-     */
-    const errorMessage =
-      error instanceof Error
-        ? "Error Saving User " + error.message
-        : "An unknown error occurred";
-    /**
-     * If there is an error, we want to return a JSON response with a status code of 500
-     * and a message indicating that there was an error
-     */
-    return NextResponse.json({ message: errorMessage }, { status: 500 });
+    return handleError(error, 500, "Error Creating User");
   }
 };
