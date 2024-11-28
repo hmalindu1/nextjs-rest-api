@@ -84,3 +84,91 @@ export const POST = async (request: NextRequest) => {
     return handleError(error, 500, "Error Creating User");
   }
 };
+
+/**
+ * Handles PATCH requests to the /users endpoint.
+ * This function is called when a PATCH request is made to update a user's information.
+ * It expects a JSON body with the user's ID and the new values to update.
+ * If the user ID is missing or invalid, it returns a 400 status code with an error message.
+ * If the user does not exist in the database, it returns a 404 status code with an error message.
+ * If the user is successfully updated, it returns a 200 status code with the updated user and a success message.
+ * If there is an error during the update process, it returns a 500 status code with an error message.
+ */
+
+export const PATCH = async (request: NextRequest) => {
+  try {
+    /**
+     * First, we need to get the JSON body from the request. The `json()` method
+     * is a special method provided by Next.js that parses the request body as
+     * JSON and returns it as an object.
+     */
+    const body = await request.json();
+
+    /**
+     * Next, we need to validate the user ID that was passed in the request body.
+     * The user ID should be a string, and it should not be empty. If the user ID
+     * is invalid, we should return a 400 status code with an error message.
+     */
+    if (!body.id || typeof body.id !== 'string' || body.id.trim() === '') {
+      // If the user ID is invalid, return a 400 status code with an error message
+      return NextResponse.json(
+        { error: "Invalid or missing user ID" },
+        { status: 400 }
+      );
+    }
+
+    /**
+     * Now that we have a valid user ID, we need to check if the user actually
+     * exists in the database. We are using the Prisma client to query the
+     * database for the user with the given ID. The `findUnique()` method takes
+     * an object with a `where` property as its argument. The `where` property
+     * should contain the ID of the user we are looking for.
+     */
+    const existingUser = await prisma.user.findUnique({
+      where: { id: body.id }
+    });
+
+    /**
+     * If the user does not exist in the database, we should return a 404 status
+     * code with an error message.
+     */
+    if (!existingUser) {
+      return NextResponse.json(
+        { error: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    /**
+     * Now that we know the user exists, we can update the user in the database
+     * with the new values. We are using the Prisma client to update the user in
+     * the database. The `update()` method takes an object with a `where` property
+     * and a `data` property as its argument. The `where` property should contain
+     * the ID of the user we are updating, and the `data` property should contain
+     * the new values for the user.
+     */
+    const user = await prisma.user.update({
+      where: { id: body.id },
+      data: {
+        username: body.username,
+        password: body.password,
+      },
+    });
+
+    /**
+     * Finally, we can return the updated user and a success message. We are
+     * using the `NextResponse` object to customize the response to the user.
+     */
+    return NextResponse.json(
+      { user, message: "User updated successfully" },
+      { status: 200 }
+    );
+  } catch (error: unknown) {
+    /**
+     * If there is an error with the database query, we should return a 500 status
+     * code with an error message. We are using the `handleError()` function to
+     * handle the error.
+     */
+    return handleError(error, 500, "Error Updating User");
+  }
+};
