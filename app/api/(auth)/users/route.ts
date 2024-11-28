@@ -7,6 +7,7 @@
 
 import { prisma } from "@/utils/db";
 import { handleError } from "@/utils/errorHandler";
+import exp from "constants";
 import { NextRequest, NextResponse } from "next/server";
 
 /**
@@ -109,7 +110,7 @@ export const PATCH = async (request: NextRequest) => {
      * The user ID should be a string, and it should not be empty. If the user ID
      * is invalid, we should return a 400 status code with an error message.
      */
-    if (!body.id || typeof body.id !== 'string' || body.id.trim() === '') {
+    if (!body.id || typeof body.id !== "string" || body.id.trim() === "") {
       // If the user ID is invalid, return a 400 status code with an error message
       return NextResponse.json(
         { error: "Invalid or missing user ID" },
@@ -125,7 +126,7 @@ export const PATCH = async (request: NextRequest) => {
      * should contain the ID of the user we are looking for.
      */
     const existingUser = await prisma.user.findUnique({
-      where: { id: body.id }
+      where: { id: body.id },
     });
 
     /**
@@ -133,10 +134,7 @@ export const PATCH = async (request: NextRequest) => {
      * code with an error message.
      */
     if (!existingUser) {
-      return NextResponse.json(
-        { error: "User not found" },
-        { status: 404 }
-      );
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
     /**
@@ -170,5 +168,55 @@ export const PATCH = async (request: NextRequest) => {
      * handle the error.
      */
     return handleError(error, 500, "Error Updating User");
+  }
+};
+
+    /**
+     * Handles DELETE requests to the /users endpoint.
+     * This function is called when a DELETE request is made to delete a user.
+     * It takes the request and response objects as parameters, which are special
+     * objects that Next.js provides that allow us to customize the request and
+     * response.
+     * This function tries to delete a user in the database with the ID in the
+     * request body. If the deletion is successful, it returns a JSON response with
+     * a status code of 200 and the deleted user. If there is an error with the
+     * database query, it returns a 500 status code with an error message.
+     */
+export const DELETE = async (request: NextRequest) => {
+  try {
+    const body = await request.json();
+
+    if (!body.id || typeof body.id !== "string" || body.id.trim() === "") {
+      // If the user ID is invalid, return a 400 status code with an error message
+      return NextResponse.json(
+        { error: "Invalid or missing user ID" },
+        { status: 400 }
+      );
+    }
+
+    const existingUser = await prisma.user.findUnique({
+      where: { id: body.id },
+    });
+
+    /**
+     * If the user does not exist in the database, we should return a 404 status
+     * code with an error message.
+     */
+    if (!existingUser) {
+      return NextResponse.json({ error: "User not found" }, { status: 404 });
+    }
+
+    const user = await prisma.user.delete({
+      where: {
+        id: body.id,
+      },
+    });
+    
+    return NextResponse.json(
+      { user, message: "User deleted successfully" },
+      { status: 200 }
+    );
+  } catch (error: unknown) {
+    return handleError(error, 500, "Error Deleting User");
   }
 };
